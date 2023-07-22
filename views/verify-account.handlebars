@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+
+    <style>
+        fieldset{
+            border-radius: 8px;
+            border: 1px solid gray;
+            padding: 14px 18px;
+        }
+        legend{
+            font-size: x-large;
+            color: rgb(31, 32, 34);
+            font-weight: bold;
+        }
+        fieldset .email-desc{
+            font-size: 14px;
+            color: rgb(31, 32, 34);
+        }
+        .container{
+            margin: 0 1.5rem;
+        }
+        small{
+            margin: 8px 0;
+        }
+        .email-btn{
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            background-color: #2299fb;
+        }
+        .number-pad{
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 1px 3px 11px #f8f8f8;
+            padding: 14px 18px;
+            margin-bottom: 1.8rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="https://www.flutterpay.net" target="_blank">
+        <img src="cid:logo">
+    </a>
+    
+
+    <fieldset>
+        <legend>
+            Verify Your Email address 
+        </legend>
+        <div class="container">
+            <h3 class="email-desc">We’re thrilled 
+                to have you on board. To get the most out of Tryspeed services, We ask customer's to confirm their email 
+               - {{email}}</h3>
+                <p>Copy the Code or Click the button below to confirm your email address</p>
+
+                <p class="number-pad">{{code}}</p>
+                <br>
+                <a href="{{uri}}" class="email-btn">Verify your email</a>
+
+                <br>
+                
+                <p>If you’re having trouble with the button above, copy and paste the URL below into your web browser.</p>
+                {{uri}}
+        </div>
+        <small>
+            If you have any questions, feel free to email our customer success team ( quickreply@Tryspeed.com ). (We're lightning quick at replying.)
+        </small>
+
+        <h3 class="team-desc-footer">
+            Thanks,
+            Tryspeed Co. Team
+        </h3>
+
+        <hr>
+
+        <div>
+            <p>
+
+
+                Tryspeed, LLC
+
+                16 waterworks Rd. Abakaliki, EB.
+                Nigeria
+            </p>
+        </div>
+
+
+    </fieldset>
+    
+    
+</body>
+</html>
