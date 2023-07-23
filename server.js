@@ -27,7 +27,7 @@ app.use(express.urlencoded({extended: true}));
 
 app.use(`${process.env.APP_API_BASE_URL}/auth`, require("./api/auth/User"));
 
-app.use(`${process.env.APP_API_BASE_URL}/admin`, require("./api/admin/Admin"));
+app.use(`${process.env.APP_API_BASE_URL}/wallet`, require("./api/wallet/UserWallet"));
 app.use('/*', (req, res) => {
 
     res.json({"error": "Endpoint resource Not Found!"});

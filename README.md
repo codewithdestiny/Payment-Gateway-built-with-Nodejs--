@@ -18,7 +18,6 @@
 
 
 # Admin
-## Login admin
 ## Change Password
 ## Forgot password
 ## Delete Staffs & Users

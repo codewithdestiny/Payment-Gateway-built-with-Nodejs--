@@ -61,6 +61,14 @@ const userModel = Schema({
         type: Boolean,
         default: false
     },
+    device_fingerprint: {
+        type: String,
+        default: ''
+    },
+    country: {
+        type: String,
+        default: ''
+    },
     why_disabled: {
 
         invalid_login : {

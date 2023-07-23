@@ -6,6 +6,8 @@ const crypto = require('crypto');
 const hbs = require("nodemailer-express-handlebars");
 const moment = require('moment');
 const UserVerification = require("../../models/UserVerification");
+const UserWallet = require("../../models/UserWallet");
+const Flutterwave = require('flutterwave-node-v3');
 require("dotenv").config();
 
 const handlebarOptions = {
@@ -22,11 +24,14 @@ emailTransport.use('compile', hbs(handlebarOptions));
 
 const registerUser = (req, res, next) => {
     
-    const {email, password, re_password} = req.body;
+    const {email, password, re_password, bvn } = req.body;
 
     const verifyCode = crypto.randomInt(0, 1000000);
 
     const token = crypto.randomBytes(32).toString("hex");
+
+    const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
+
 
     const expireAt = moment(Date.now()).add(process.env.VERIFICATION_EMAIL_EXPIRES_AT, 'minutes').toDate();
     
@@ -50,68 +55,111 @@ const registerUser = (req, res, next) => {
                     email: email,
                     password: hashedPassword
                 })
-                    .then( userObj => {
-                        //create new user
+                .then( userObj => {
+                    //create new user
 
 
-                        UserVerification.create({
+                    UserVerification.create({
+                        userId: userObj._id,
+                        code : verifyCode,
+                        token: token,
+                        expire_at: expireAt
+                    })
+                    .then( saved => {
+
+                         /*
+                            Create account wallet for user in 
+                            NARIA currency
+
+
+                            - Phone Number is important
+                         */
+
+                    const payload = {
+                        "email": userObj.email,
+                        "is_permanent": true,
+                        "bvn": bvn
+                    }
+                    
+                    flw.VirtualAcct.create(payload)
+                    .then(response => {
+
+                        UserWallet.create({
                             userId: userObj._id,
-                            code : verifyCode,
-                            token: token,
-                            expire_at: expireAt
+                            account_id: response.data.id,
+                            order_ref: response.data.order_ref,
+                            flw_ref: response.data.flw_ref,
+                            email: userObj.email,
+                            account_number: response.data.account_number,
+                            account_name: response.data.account_name,
+                            bank_name: response.data.bank_name,
+                            currency: 'NGN',
+                            expire_date: response.data.expire_date,
+                            created_at: response.data.created_at,
+                            account_status: response.data.account_status,
+                            frequency: response.data.frequency,
+                            avail_bal: response.data.amount,
+                            bvn: payload.bvn
+
                         })
-                        .then( saved => {
+                    })
+                    .catch(err => {
+                        console.log({"error": `${err}`})
+                    })
+                    
 
-                            const emailToken = `https://account.paykonect.com/verify/${userObj._id}/${saved.token}`;
 
-                            emailTransport.sendMail({
-                                from: `${process.env.EMAIL_FROM}`,
-                                to: userObj.email,
-                                subject: `${process.env.APP_NAME} Email Confirmation `,
-                                template: 'verify-account',
-                                context: {
-                                    title: `${process.env.APP_NAME} Confirmation Email`,
-                                    email: userObj.email,
-                                    code : saved.code,
-                                    uri: emailToken
-                                },
-                                attachments: [{
-                                    filename: 'logo.png',
-                                      path: './views/logo.png',
-                                     cid: 'logo'
-                                }],
-                                },
-                                (err , info) => {
-                                    if(err){
-                                        console.log(err);
-                                    }else{
-                                        console.log(info.messageId);
-                                    }
+                        const emailToken = `https://account.paykonect.com/verify/${userObj._id}/${saved.token}`;
+
+                        emailTransport.sendMail({
+                            from: `${process.env.EMAIL_FROM}`,
+                            to: userObj.email,
+                            subject: `${process.env.APP_NAME} Email Confirmation `,
+                            template: 'verify-account',
+                            context: {
+                                title: `${process.env.APP_NAME} Confirmation Email`,
+                                email: userObj.email,
+                                code : saved.code,
+                                uri: emailToken
+                            },
+                            attachments: [{
+                                filename: 'logo.png',
+                                    path: './views/logo.png',
+                                    cid: 'logo'
+                            }],
+                            },
+                            (err , info) => {
+                                if(err){
+                                    console.log(err);
+                                }else{
+                                    console.log(info.messageId);
                                 }
-                            )
-
-                            if(token){
-
-                                res.user = userObj._id.toString()
-                                
-                                return res.json({"token": emailToken})
-
-                            }else{
-                                
-                                return res.json({"error": "Failed to create token"});
                             }
+                        )
 
-                        })
-                        .catch( err => {
-                            return res.json({"error": `Error occurred - ${err}`})
-                        })
-                        
+                        if(token){
+
+                            res.user = userObj._id.toString()
+                            
+                            return res.json({"token": emailToken})
+
+                        }else{
+                            
+                            return res.json({"error": "Failed to create token"});
+                        }
+
                     })
                     .catch( err => {
-
-                        return res.json({"err": `Failed to create user ${err}`});
-
+                        return res.json({"error": `Error occurred - ${err}`})
                     })
+                    
+                })
+                
+                .catch( err => {
+
+                    return res.json({"err": `Failed to create user ${err}`});
+
+                })
 
             }
             else if(response.email == email.toLowerCase() && response.is_verified == false){
